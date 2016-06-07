@@ -10,13 +10,14 @@ IN: exercism.testing
 
 <PRIVATE
 
+SYMBOL: reversed-roots-this-session?
 
 : child-directories ( path -- directories )
   directory-entries
   [ directory? ] filter
   [ name>>     ] map ;
 
-CONSTANT: name-clashes { "hello-world" }
+CONSTANT: name-clashes { "hello-world" "binary-search" "poker" }
 
 TUPLE: config
       { problems   array }
@@ -63,11 +64,14 @@ M: user-env exercise>filenames
   first2 ;
 
 : (handle-name-clash) ( -- )
-  vocab-roots namespaces:get reverse vocab-roots namespaces:set ;
+  reversed-roots-this-session? not [
+    vocab-roots namespaces:get reverse vocab-roots namespaces:set
+  ] when
+  reversed-roots-this-session? t namespaces:set ; inline
 
-HOOK: handle-name-clash project-env ( -- )
+HOOK: handle-name-clash project-env ( name -- )
 M: dev-env handle-name-clash
-  exercises-folder prepend-path-path add-vocab-root
+  exercises-folder prepend-path add-vocab-root
   (handle-name-clash) ; inline
 
 M: user-env handle-name-clash
@@ -82,7 +86,7 @@ M: dev-env get-config-data
   config slots>tuple ;
 
 M: user-env get-config-data
-  \ get-config-data not-user-env ;
+  M\ user-env get-config-data not-user-env ;
 
 
 HOOK: exercise-exists? project-env ( exercise -- ? )
@@ -107,7 +111,7 @@ M: dev-env config-exclusive?
   sets:intersect { } = ;
 
 M: user-env config-exclusive?
-  \ config-exclusive? not-dev-env ;
+  M\ user-env config-exclusive? not-dev-env ;
 
 
 HOOK: config-matches-fs? project-env ( dirs problems deprecated -- ? )
@@ -118,11 +122,14 @@ M: dev-env config-matches-fs?
 M: user-env config-matches-fs?
   \ config-matches-fs? not-dev-env ;
 
-: (run-exercism-test) ( exercise -- )
-  dup name-clashes member? [ handle-name-clash ] when
+:: (run-exercism-test) ( exercise -- )
+  exercise
+  [ name-clashes member?
+    [ exercise handle-name-clash ] when
+  ]
   [ "\ntesting exercise: %s\n\n" printf ]
   [ exercise>filenames ]
-  bi
+  tri
   run-file run-test-file ;
 
 : wd-git-name ( -- name )
@@ -180,7 +187,7 @@ M: f run-exercism-test
 : run-all-exercism-tests ( -- )
   exercises-folder child-directories [ run-exercism-test ] each ;
 
-: choose-suite ( arg -- )
+: choose-exercism-test-suite ( arg -- )
   {
     { [ dup "VERIFY"  =      ] [ drop verify-config ] }
     { [ dup "run-all" =      ] [ drop verify-config run-all-exercism-tests ] }
@@ -225,7 +232,7 @@ M: f run-exercism-test
   (command-line) last
   dup "factor" =
   [ "need a command-line argument" throw ]
-  [ choose-suite ]
+  [ choose-exercism-test-suite ]
   if ;
 
 guess-project-env

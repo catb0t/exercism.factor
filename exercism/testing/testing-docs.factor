@@ -4,7 +4,7 @@ IN: exercism.testing
 
 HELP: verify-config
   { $description
-    "Verifies a configuration. Called on running " { $link choose-suite } "."
+    "Verifies a configuration. Called on running " { $link choose-exercism-test-suite } "."
 
     $nl "When " { $link project-env } " is " { $link dev-env } ", then " { $snippet "config.json" } " is checked for internal consistency and consistency with the filesystem, and that all of the " { $snippet "exercises" } " directory's " { $link child-directories } " contain at least " { $snippet "exercise-tests.factor" } " and " { $snippet "exercise-example.factor" } ". If an error is found, the operation is aborted."
 
@@ -54,7 +54,7 @@ HELP: run-all-exercism-tests
   { $description
     "Runs all Exercism exercise tests found in the " { $link exercises-folder } " in the current directory." } ;
 
-HELP: choose-suite
+HELP: choose-exercism-test-suite
   { $values { "arg" string } }
   { $description
     "Runs tests for problem named " { $snippet "arg" } ", or runs all tests if " { $snippet "arg" } " is "
