@@ -17,7 +17,10 @@ SYMBOL: reversed-roots-this-session?
   [ directory? ] filter
   [ name>>     ] map ;
 
-CONSTANT: name-clashes { "hello-world" "binary-search" "poker" }
+CONSTANT: name-clashes
+  { "hello-world" "binary-search" "poker" }
+CONSTANT: git-dev-repo-name
+  "xfactor"
 
 TUPLE: config
       { problems   array }
@@ -64,7 +67,7 @@ M: user-env exercise>filenames
   first2 ;
 
 : (handle-name-clash) ( -- )
-  reversed-roots-this-session? not [
+  reversed-roots-this-session? namespaces:get not [
     vocab-roots namespaces:get reverse vocab-roots namespaces:set
   ] when
   reversed-roots-this-session? t namespaces:set ; inline
@@ -132,12 +135,43 @@ M: user-env config-matches-fs?
   tri
   run-file run-test-file ;
 
-: wd-git-name ( -- name )
+HOOK: wd-git-name os ( -- name )
+M: windows wd-git-name "" ;
+
+M: unix wd-git-name
   "git rev-parse --show-toplevel" utf8 [ contents ] with-process-reader*
   nip 0 =
   [ path-components last dup length 1 - head ]
   [ drop "" ]
   if ;
+
+: telltale-files-exist? ( -- ? )
+  "exercises" { ".keep" "hello-world" }
+  [ append-path ] with map
+  {
+    "config.json"
+    ".git"
+    ".gitignore"
+    "exercises"
+  }
+  append
+  [ exists? ] all? ;
+
+: valid-git-repo-name? ( -- ? )
+  wd-git-name git-dev-repo-name = ;
+
+: dev-wd? ( -- ? )
+  ".." prepend-path absolute-path
+  current-directory namespaces:get
+  git-dev-repo-name = ;
+
+: wd-is-dev-env? ( -- ? )
+  dev-files-exist? valid-git-repo-name? dev-wd? 3array all?
+  dup [ T{ dev-env } project-env namespaces:set ] when ;
+
+: wd-is-user-env? ( -- ? )
+  "hello-world" exists?
+  dup [ T{ user-env } project-env namespaces:set ] when ;
 
 PRIVATE>
 
@@ -196,33 +230,11 @@ M: f run-exercism-test
   } cond ;
 
 : guess-project-env ( -- )
-  "exercises" { ".keep" "hello-world" }
-  [ append-path ] with map
-  {
-    "config.json"
-    ".git"
-    ".gitignore"
-    "exercises"
-  }
-  append
-  [ exists? ] all?
-  "xfactor"
-  [ wd-git-name = ]
-  [ ".." prepend-path absolute-path current-directory namespaces:get = ]
-  bi and and dup [ T{ dev-env } project-env namespaces:set ] when
-
-  {
-    "hello-world"
-  } [ exists? ] all?
-  dup [ T{ user-env } project-env namespaces:set ] when
-
-  xor
-  [
-    current-directory project-env [ namespaces:get ] bi@
+  wd-is-user-env? wd-is-dev-env? xor
+  [ current-directory project-env [ namespaces:get ] bi@
     "working directory OK: %s is a %s \n" printf
   ]
-  [
-    current-directory namespaces:get
+  [ current-directory namespaces:get
     "exercism.testing: `%s' is not an `exercism/factor' folder or `xfactor' git project \n\n" printf
     f project-env namespaces:set
   ] if ;
@@ -230,10 +242,7 @@ M: f run-exercism-test
 : exercism-testing-main ( -- )
   ! guess-project-env
   (command-line) last
-  dup "factor" =
-  [ "need a command-line argument" throw ]
-  [ choose-exercism-test-suite ]
-  if ;
+  choose-exercism-test-suite ;
 
 guess-project-env
 MAIN: exercism-testing-main
