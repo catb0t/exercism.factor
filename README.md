@@ -45,10 +45,6 @@ Check out `exercism.testing`'s documentation for more information.
 
 If you need help, just open an issue here or on [xfactor][xfactor].
 
-# `exercism.client`
-
-There's nothing here yet, but there might be sometime.
-
  [exercism]: http://exercism.io
  [factor]:   http://factorcode.org
  [xfactor]:  http://github.com/exercism/xfactor

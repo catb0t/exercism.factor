@@ -16,6 +16,8 @@ SYMBOL: reversed-roots-this-session?
   [ directory? ] filter
   [ name>>     ] map ;
 
+CONSTANT: own-rawgit-url-stub
+  "https://raw.githubusercontent.com/catb0t/exercism.factor/master/exercism/testing/testing"
 CONSTANT: name-clashes
   { "hello-world" "binary-search" "poker" }
 CONSTANT: git-dev-repo-name
@@ -173,6 +175,11 @@ M: unix wd-git-name
 
 PRIVATE>
 
+: self-update ( -- )
+  "" throw [
+    own-rawgit-url-stub ".factor" { "" "-docs" "-tests" } [ glue ] 2with map
+    [ [ print ] [ download ] bi ] each
+  ] with-directory ;
 
 HOOK: verify-config project-env ( -- )
 M: dev-env verify-config
@@ -223,6 +230,7 @@ M: f run-exercism-test
   {
     { [ dup "VERIFY"  =      ] [ drop verify-config ] }
     { [ dup "run-all" =      ] [ drop verify-config run-all-exercism-tests ] }
+    { [ dup "update"  =      ] [ drop "self-update" drop ] }
     { [ dup exercise-exists? ] [ verify-config run-exercism-test ] }
       [ verify-config "exercism.testing: choose-suite: bad last argument `%s', expected 'run-all' or an exercise slug\n\n" printf ]
   } cond ;
