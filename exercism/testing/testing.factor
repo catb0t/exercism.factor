@@ -1,4 +1,3 @@
-! See http://factorcode.org/license.txt for BSD license.
 USING: accessors arrays assocs classes.tuple combinators
   command-line formatting io io.directories io.encodings.utf8
   io.files io.files.info io.launcher io.pathnames json.reader
@@ -145,7 +144,7 @@ M: unix wd-git-name
   [ drop "" ]
   if ;
 
-: telltale-files-exist? ( -- ? )
+: dev-files-exist? ( -- ? )
   "exercises" { ".keep" "hello-world" }
   [ append-path ] with map
   {
@@ -161,12 +160,11 @@ M: unix wd-git-name
   wd-git-name git-dev-repo-name = ;
 
 : dev-wd? ( -- ? )
-  ".." prepend-path absolute-path
-  current-directory namespaces:get
-  git-dev-repo-name = ;
+  git-dev-repo-name ".." prepend-path absolute-path
+  current-directory namespaces:get = ;
 
 : wd-is-dev-env? ( -- ? )
-  dev-files-exist? valid-git-repo-name? dev-wd? 3array all?
+  dev-files-exist? valid-git-repo-name? dev-wd? 3array [ ] all?
   dup [ T{ dev-env } project-env namespaces:set ] when ;
 
 : wd-is-user-env? ( -- ? )

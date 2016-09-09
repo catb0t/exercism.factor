@@ -1,4 +1,3 @@
-! See http://factorcode.org/license.txt for BSD license.
 USING: io.directories help.markup help.syntax multiline strings exercism.testing.private tools.test ;
 IN: exercism.testing
 

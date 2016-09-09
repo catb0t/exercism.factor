@@ -1,4 +1,3 @@
-! See http://factorcode.org/license.txt for BSD license.
 USING: tools.test exercism.testing exercism.testing.private ;
 FROM: namespaces => get set ;
 IN: exercism.testing.tests

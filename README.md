@@ -47,7 +47,7 @@ If you need help, just open an issue here or on [xfactor][xfactor].
 
 # `exercism.client`
 
-There's nothing here yet, but there likely will be soon.
+There's nothing here yet, but there might be sometime.
 
  [exercism]: http://exercism.io
  [factor]:   http://factorcode.org
