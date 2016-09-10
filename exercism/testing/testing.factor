@@ -1,9 +1,9 @@
 USING: accessors arrays assocs classes.tuple combinators
   command-line formatting http.client io io.directories
   io.encodings.utf8 io.files io.files.info io.launcher
-  io.pathnames json.reader kernel locals math multiline parser
-  present sequences sets sorting summary system
-  tools.scaffold.private tools.test vocabs.loader ;
+  io.pathnames json.reader kernel locals math math.parser
+  multiline parser present sequences sets sorting splitting
+  summary system tools.scaffold.private tools.test vocabs.loader ;
 QUALIFIED: namespaces
 QUALIFIED: sets
 IN: exercism.testing
@@ -11,6 +11,7 @@ IN: exercism.testing
 <PRIVATE
 
 SYMBOL: reversed-roots-this-session?
+SYMBOL: update-now?
 
 : child-directories ( path -- directories )
   directory-entries
@@ -174,25 +175,41 @@ M: unix wd-git-name
   "hello-world" exists?
   dup [ T{ user-env } project-env namespaces:set ] when ;
 
+: do-update? ( -- ? )
+  own-rawgit-url-stub "/VERSION.txt" append http-get nip string-lines
+  "./VERSION.txt" utf8 file-lines
+  2dup =
+
+  [ 2drop { t t } ]
+  [
+    zip
+    [ first first2 = ]
+    [ second [ string>number ] map first2 >= ]
+    bi 2array
+  ]
+  if ;
+
+: self-update ( -- )
+  own-rawgit-url-stub "testing" append
+  ".factor" { "" "-docs" "-tests" } [ glue ] 2with map
+  [ [ "GET: %s\n" printf ] [ download ] bi ] each ;
+
+
 PRIVATE>
+
 
 : exercism-testing-self-update ( -- )
   "exercism.testing" vocab>path absolute-path
   [
-    own-rawgit-url-stub "/VERSION" append http-get nip string-lines
-    "./VERSION" utf8 file-lines
-    2dup =
-    [ 3drop f ]
-    [
-      [ [ first ] bi@ = not ]
-      [ [ second string>number ] bi@ >= ]
-      bi 2dup
-      and [ 2drop t ] [ xor ] if
-    ]
-    if
-  ] with-directory
-  print
-  ;
+    do-update?
+    {
+      { [ dup { f f } = ] [ drop "nocorrel; client is ahead, publish your local changes!" print ] }
+      { [ dup { t f } = ] [ drop "samesha2; client is equal & newer: not updating " print ] }
+      { [ dup { f t } = ] [ drop "timegteq; server is ahead & newer: UPDATING" print self-update ] }
+      { [ dup { t t } = ] [ drop "bothtrue; server is equal & newer: not updating" print ] }
+    } cond
+
+  ] with-directory ;
 
 HOOK: verify-config project-env ( -- )
 M: dev-env verify-config
