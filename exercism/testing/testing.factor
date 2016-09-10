@@ -1,8 +1,9 @@
 USING: accessors arrays assocs classes.tuple combinators
-  command-line formatting io io.directories io.encodings.utf8
-  io.files io.files.info io.launcher io.pathnames json.reader
-  kernel locals math multiline parser present sequences sets
-  sorting summary system tools.test vocabs.loader ;
+  command-line formatting http.client io io.directories
+  io.encodings.utf8 io.files io.files.info io.launcher
+  io.pathnames json.reader kernel locals math multiline parser
+  present sequences sets sorting summary system
+  tools.scaffold.private tools.test vocabs.loader ;
 QUALIFIED: namespaces
 QUALIFIED: sets
 IN: exercism.testing
@@ -17,7 +18,7 @@ SYMBOL: reversed-roots-this-session?
   [ name>>     ] map ;
 
 CONSTANT: own-rawgit-url-stub
-  "https://raw.githubusercontent.com/catb0t/exercism.factor/master/exercism/testing/testing"
+  "https://raw.githubusercontent.com/catb0t/exercism.factor/master/"
 CONSTANT: name-clashes
   { "hello-world" "binary-search" "poker" }
 CONSTANT: git-dev-repo-name
@@ -175,10 +176,14 @@ M: unix wd-git-name
 
 PRIVATE>
 
-: self-update ( -- )
-  "" throw [
-    own-rawgit-url-stub ".factor" { "" "-docs" "-tests" } [ glue ] 2with map
-    [ [ print ] [ download ] bi ] each
+: exercism-testing-self-update ( -- )
+  "exercism.testing" vocab>path absolute-path
+  "pwd: %s\n" printf
+  own-rawgit-url-stub "VERSION" append http-get nip
+  [
+    own-rawgit-url-stub "/exercism/testing/testing" append
+    ".factor" { "" "-docs" "-tests" } [ glue ] 2with map
+    [ [ "GET: %s\n" printf ] [ download ] bi ] each
   ] with-directory ;
 
 HOOK: verify-config project-env ( -- )
@@ -230,7 +235,7 @@ M: f run-exercism-test
   {
     { [ dup "VERIFY"  =      ] [ drop verify-config ] }
     { [ dup "run-all" =      ] [ drop verify-config run-all-exercism-tests ] }
-    { [ dup "update"  =      ] [ drop "self-update" drop ] }
+    { [ dup "update"  =      ] [ drop exercism-testing-self-update ] }
     { [ dup exercise-exists? ] [ verify-config run-exercism-test ] }
       [ verify-config "exercism.testing: choose-suite: bad last argument `%s', expected 'run-all' or an exercise slug\n\n" printf ]
   } cond ;
