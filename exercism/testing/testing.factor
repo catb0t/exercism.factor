@@ -18,7 +18,7 @@ SYMBOL: reversed-roots-this-session?
   [ name>>     ] map ;
 
 CONSTANT: own-rawgit-url-stub
-  "https://raw.githubusercontent.com/catb0t/exercism.factor/master"
+  "https://raw.githubusercontent.com/catb0t/exercism.factor/master/exercism/testing"
 CONSTANT: name-clashes
   { "hello-world" "binary-search" "poker" }
 CONSTANT: git-dev-repo-name
@@ -177,36 +177,22 @@ M: unix wd-git-name
 PRIVATE>
 
 : exercism-testing-self-update ( -- )
-  "exercism" vocab>path absolute-path
+  "exercism.testing" vocab>path absolute-path
   [
-    own-rawgit-url-stub "/VERSION" append http-get nip
+    own-rawgit-url-stub "/VERSION" append http-get nip string-lines
+    "./VERSION" utf8 file-lines
+    2dup =
+    [ 3drop f ]
+    [
+      [ [ first ] bi@ = not ]
+      [ [ second string>number ] bi@ >= ]
+      bi 2dup
+      and [ 2drop t ] [ xor ] if
+    ]
+    if
   ] with-directory
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  [
-    own-rawgit-url-stub "/exercism/testing/testing" append
-    ".factor" { "" "-docs" "-tests" } [ glue ] 2with map
-    [ [ "GET: %s\n" printf ] [ download ] bi ] each
-  ] with-directory ;
+  print
+  ;
 
 HOOK: verify-config project-env ( -- )
 M: dev-env verify-config
