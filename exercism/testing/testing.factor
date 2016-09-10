@@ -1,9 +1,10 @@
-USING: accessors arrays assocs classes.tuple combinators
-  command-line formatting http.client io io.directories
-  io.encodings.utf8 io.files io.files.info io.launcher
-  io.pathnames json.reader kernel locals math math.parser
-  multiline parser present sequences sets sorting splitting
-  summary system tools.scaffold.private tools.test vocabs.loader ;
+USING: accessors arrays assocs calendar checksums checksums.sha
+  classes.tuple combinators command-line formatting http.client io
+  io.directories io.encodings.utf8 io.files io.files.info
+  io.launcher io.pathnames json.reader kernel locals math
+  math.parser multiline parser present sequences sets sorting
+  splitting summary system tools.scaffold.private tools.test
+  vocabs.loader ;
 QUALIFIED: namespaces
 QUALIFIED: sets
 IN: exercism.testing
@@ -192,8 +193,13 @@ M: unix wd-git-name
 : self-update ( -- )
   own-rawgit-url-stub "/testing" append
   ".factor" { "" "-docs" "-tests" } [ glue ] 2with map
-  [ [ "GET: %s\n" printf ] [ download ] bi ] each ;
+  [ [ "GET: %s\n" printf ] [ download ]  bi ] each ;
 
+: bump-version ( -- )
+  "." directory-files [ utf8 file-lines ] map
+  sha-224 checksum-lines bytes>hex-string
+  now timestamp>unix-time >integer number>string
+  2array "./VERSION.txt" utf8 set-file-lines ;
 
 PRIVATE>
 
@@ -205,7 +211,7 @@ PRIVATE>
     {
       { [ dup { f f } = ] [ drop "nocorrel; client is ahead, publish your local changes!" print ] }
       { [ dup { t f } = ] [ drop "samesha2; client is equal & newer: not updating " print ] }
-      { [ dup { f t } = ] [ drop "timegteq; server is ahead & newer: UPDATING" print self-update ] }
+      { [ dup { f t } = ] [ drop "timegteq; server is ahead & newer: UPDATING" print self-update bump-version ] }
       { [ dup { t t } = ] [ drop "bothtrue; server is equal & newer: not updating" print ] }
     } cond
 
