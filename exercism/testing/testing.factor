@@ -190,7 +190,7 @@ M: unix wd-git-name
   if ;
 
 : self-update ( -- )
-  own-rawgit-url-stub "testing" append
+  own-rawgit-url-stub "/testing" append
   ".factor" { "" "-docs" "-tests" } [ glue ] 2with map
   [ [ "GET: %s\n" printf ] [ download ] bi ] each ;
 
