@@ -1,10 +1,10 @@
 USING: accessors arrays assocs calendar checksums checksums.sha
-  classes.tuple combinators command-line formatting http.client io
-  io.directories io.encodings.utf8 io.files io.files.info
-  io.launcher io.pathnames json.reader kernel locals math
-  math.parser multiline parser present sequences sets sorting
-  splitting summary system tools.scaffold.private tools.test
-  vocabs.loader ;
+  classes.tuple combinators command-line exercism.self-update
+  formatting http.client io io.directories io.encodings.utf8
+  io.files io.files.info io.launcher io.pathnames json.reader
+  kernel locals math math.parser multiline parser present
+  sequences sets sorting splitting summary system
+  tools.scaffold.private tools.test vocabs.loader ;
 QUALIFIED: namespaces
 QUALIFIED: sets
 IN: exercism.testing
@@ -19,10 +19,9 @@ SYMBOL: update-now?
   [ directory? ] filter
   [ name>>     ] map ;
 
-CONSTANT: own-rawgit-url-stub
-  "https://raw.githubusercontent.com/catb0t/exercism.factor/master/exercism/testing"
 CONSTANT: name-clashes
   { "hello-world" "binary-search" "poker" }
+
 CONSTANT: git-dev-repo-name
   "xfactor"
 
@@ -176,46 +175,7 @@ M: unix wd-git-name
   "hello-world" exists?
   dup [ T{ user-env } project-env namespaces:set ] when ;
 
-: do-update? ( -- ? )
-  own-rawgit-url-stub "/VERSION.txt" append http-get nip string-lines
-  "./VERSION.txt" utf8 file-lines
-  2dup =
-
-  [ 2drop { t t } ]
-  [
-    zip
-    [ first first2 = ]
-    [ second [ string>number ] map first2 >= ]
-    bi 2array
-  ]
-  if ;
-
-: self-update ( -- )
-  own-rawgit-url-stub "/testing" append
-  ".factor" { "" "-docs" "-tests" } [ glue ] 2with map
-  [ [ "GET: %s\n" printf ] [ download ]  bi ] each ;
-
-: bump-version ( -- )
-  "." directory-files [ utf8 file-lines ] map
-  sha-224 checksum-lines bytes>hex-string
-  now timestamp>unix-time >integer number>string
-  2array "./VERSION.txt" utf8 set-file-lines ;
-
 PRIVATE>
-
-
-: exercism-testing-self-update ( -- )
-  "exercism.testing" vocab>path absolute-path
-  [
-    do-update?
-    {
-      { [ dup { f f } = ] [ drop "nocorrel; client is ahead, publish your local changes!" print ] }
-      { [ dup { t f } = ] [ drop "samesha2; client is equal & newer: not updating " print ] }
-      { [ dup { f t } = ] [ drop "timegteq; server is ahead & newer: UPDATING" print self-update bump-version ] }
-      { [ dup { t t } = ] [ drop "bothtrue; server is equal & newer: not updating" print ] }
-    } cond
-
-  ] with-directory ;
 
 HOOK: verify-config project-env ( -- )
 M: dev-env verify-config
@@ -266,7 +226,7 @@ M: f run-exercism-test
   {
     { [ dup "VERIFY"  =      ] [ drop verify-config ] }
     { [ dup "run-all" =      ] [ drop verify-config run-all-exercism-tests ] }
-    { [ dup "update"  =      ] [ drop exercism-testing-self-update ] }
+    { [ dup "update"  =      ] [ drop exercism-self-update ] }
     { [ dup exercise-exists? ] [ verify-config run-exercism-test ] }
       [ verify-config "exercism.testing: choose-suite: bad last argument `%s', expected 'run-all' or an exercise slug\n\n" printf ]
   } cond ;
