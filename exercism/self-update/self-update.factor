@@ -31,7 +31,9 @@ SYMBOL: version-lines
 
 : do-update? ( -- self-update-now? )
   f self-update-now? set
+
   [
+
     { "local" "remote" }
     [ get-version ] map first2 swap 2dup =
 
@@ -50,9 +52,10 @@ SYMBOL: version-lines
       { [ dup { f t } = ] [ drop "timegteq; server is ahead & newer: UPDATE" print t self-update-now? set ] }
       { [ dup { t t } = ] [ drop "bothtrue; server is equal & newer: no update" print ] }
     } cond
-  ] with-exercism-root
+    self-update-now? get
 
-  self-update-now? get ;
+  ] with-exercism-root ;
+
 
 : generate-urls ( -- urls )
   [
@@ -77,17 +80,19 @@ SYMBOL: version-lines
 
 : download-file-urls ( urls -- )
   [
+    "\n" write
     [
       first2 swap
       [
         [
-          [ "GET: %s" printf ]
+          [ "GET: %s\n" printf ]
           [ download ] bi
         ]
         each
       ] with-directory
     ]
     each
+    "\n" write
   ] with-exercism-root ;
 
 : self-update ( -- )
