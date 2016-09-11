@@ -4,7 +4,7 @@ USING: accessors arrays assocs calendar checksums checksums.sha
   io.files io.files.info io.launcher io.pathnames json.reader
   kernel locals math math.parser multiline parser present
   sequences sets sorting splitting summary system
-  tools.scaffold.private tools.test vocabs.loader ;
+  tools.scaffold.private tools.test unicode vocabs.loader ;
 QUALIFIED: namespaces
 QUALIFIED: sets
 IN: exercism.testing
@@ -223,10 +223,10 @@ M: f run-exercism-test
   exercises-folder child-directories [ run-exercism-test ] each ;
 
 : choose-exercism-test-suite ( arg -- )
+  >lower
   {
-    { [ dup "VERIFY"  =      ] [ drop verify-config ] }
+    { [ dup "verify"  =      ] [ drop verify-config ] }
     { [ dup "run-all" =      ] [ drop verify-config run-all-exercism-tests ] }
-    { [ dup "update"  =      ] [ drop exercism-self-update ] }
     { [ dup exercise-exists? ] [ verify-config run-exercism-test ] }
       [ verify-config "exercism.testing: choose-suite: bad last argument `%s', expected 'run-all' or an exercise slug\n\n" printf ]
   } cond ;
@@ -242,7 +242,6 @@ M: f run-exercism-test
   ] if ;
 
 : exercism-testing-main ( -- )
-  ! guess-project-env
   (command-line) last
   choose-exercism-test-suite ;
 
