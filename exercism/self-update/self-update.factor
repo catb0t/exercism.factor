@@ -44,7 +44,7 @@ SYMBOL: version-lines
 
     {
       { [ dup { f f } = ] [ drop "nocorrel; client is ahead, publish your local changes!" print ] }
-      { [ dup { t f } = ] [ drop "samesha2; client is equal & newer: no update" print ] }
+      { [ dup { t f } = ] [ drop "samesha2; client is equal & older: no update" print ] }
       { [ dup { f t } = ] [ drop "timegteq; server is ahead & newer: UPDATE" print t self-update-now? set ] }
       { [ dup { t t } = ] [ drop "bothtrue; server is equal & newer: no update" print ] }
     } cond
