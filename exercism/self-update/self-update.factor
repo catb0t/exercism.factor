@@ -6,7 +6,9 @@ USING: arrays assocs calendar checksums checksums.sha
   tools.scaffold.private unicode ;
 IN: exercism.self-update
 
+
 <PRIVATE
+
 
 CONSTANT: own-rawgit-url-stub
   "https://raw.githubusercontent.com/catb0t/exercism.factor/master/exercism"
