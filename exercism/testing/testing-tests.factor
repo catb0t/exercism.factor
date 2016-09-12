@@ -2,7 +2,7 @@ USING: tools.test exercism.testing exercism.testing.private ;
 FROM: namespaces => get set ;
 IN: exercism.testing.tests
 
-
+! exercise>filenames
 {
   "exercises/hello-world/hello-world-tests.factor"
   "exercises/hello-world/hello-world-example.factor"
@@ -35,6 +35,7 @@ IN: exercism.testing.tests
   "leap" exercise>filenames
 ] unit-test
 
+! config-exclusive?
 T{ dev-env } project-env set
 { t } [ { } { "hello-world" } config-exclusive? ] unit-test
 { t } [ { "hello-world" } { } config-exclusive? ] unit-test
@@ -43,6 +44,7 @@ T{ dev-env } project-env set
         { "hello-world" }
         config-exclusive? ] unit-test
 
+! config-matches-fs?
 { t } [ { } { } { } config-matches-fs? ] unit-test
 { t } [
         { "hello-world" }
@@ -64,3 +66,4 @@ T{ dev-env } project-env set
         { "hello-world" }
         { "blah" }
       config-matches-fs? ] unit-test
+

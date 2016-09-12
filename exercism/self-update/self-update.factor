@@ -20,6 +20,7 @@ SYMBOL: version-lines
   [ "exercism" vocab>path absolute-path ] dip with-directory ; inline
 
 : get-version ( version-type -- version-lines )
+  f version-lines set
   [
     {
       { [ dup "local" = ] [ drop "VERSION.txt" utf8 file-lines version-lines set ] }
@@ -27,6 +28,7 @@ SYMBOL: version-lines
         [ "bad cond to get-version" throw ]
     } cond
     version-lines get
+    
   ] with-exercism-root ;
 
 : do-update? ( -- self-update-now? )

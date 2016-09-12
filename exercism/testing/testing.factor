@@ -1,23 +1,24 @@
 USING: accessors arrays assocs calendar checksums checksums.sha
-  classes.tuple combinators command-line exercism.self-update
+  classes.tuple combinators command-line exercism
   formatting http.client io io.directories io.encodings.utf8
   io.files io.files.info io.launcher io.pathnames json.reader
   kernel locals math math.parser multiline parser present
-  sequences sets sorting splitting summary system
+  sequences sets sorting splitting strings summary system
   tools.scaffold.private tools.test unicode vocabs.loader ;
 QUALIFIED: namespaces
 QUALIFIED: sets
 IN: exercism.testing
 
+
 <PRIVATE
+
 
 SYMBOL: reversed-roots-this-session?
 SYMBOL: update-now?
 
-: child-directories ( path -- directories )
-  directory-entries
-  [ directory? ] filter
-  [ name>>     ] map ;
+SYMBOL: project-env
+ERROR:  wrong-project-env word ;
+
 
 CONSTANT: name-clashes
   { "hello-world" "binary-search" "poker" }
@@ -25,30 +26,40 @@ CONSTANT: name-clashes
 CONSTANT: git-dev-repo-name
   "xfactor"
 
+CONSTANT: config-keys
+  { "problems" "deprecated" "exercises" }
+
+CONSTANT: exercise-keys
+  { "topics" "difficulty" "slug" }
+
+TUPLE: exercise
+      { topics     array  }
+      { difficulty number }
+      { slug       string }  ; final
+
 TUPLE: config
       { problems   array }
-      { deprecated array } ; final
-
-SYMBOL: project-env
-ERROR:  wrong-project-env word ;
+      { deprecated array }
+      { exercises  array } ; final
 
 TUPLE: user-env ; final
-M:     user-env present
-  drop "user-env" ;
-ERROR: not-user-env  < wrong-project-env ; final
-M:     not-user-env  summary
-  word>> name>> "can't use word %s in dev environment" sprintf ;
+M:     user-env present drop "user-env" ;
+
+ERROR: not-user-env < wrong-project-env ; final
+M:     not-user-env
+  summary word>> name>> "can't use word %s in dev environment" sprintf ;
 
 TUPLE: dev-env ; final
-M:     dev-env present
-  drop "dev-env" ;
-ERROR: not-dev-env  < wrong-project-env ; final
-M:     not-dev-env  summary
-  word>> name>> "can't use word %s in user environment"  sprintf ;
+M:     dev-env present drop "dev-env" ;
+
+ERROR: not-dev-env < wrong-project-env ; final
+M:     not-dev-env
+  summary word>> name>> "can't use word %s in user environment"  sprintf ;
 
 ERROR:  not-an-exercism-folder word ;
 M:      not-an-exercism-folder summary
   word>> name>> "exercism.testing: %s: current directory is not an exercism folder" sprintf ;
+
 
 
 HOOK: exercises-folder project-env ( -- dirname )
@@ -57,8 +68,8 @@ M: user-env exercises-folder  "."         ; inline
 M: f        exercises-folder  \ exercises-folder not-an-exercism-folder ;
 
 
-HOOK: exercise>filenames project-env
-  ( test-name -- example-filename tests-filename )
+HOOK: exercise>filenames project-env ( test-name -- example-filename tests-filename )
+
 M: dev-env exercise>filenames
   dup exercises-folder prepend-path prepend-path
   { "-tests.factor" "-example.factor" }
@@ -69,6 +80,7 @@ M: user-env exercise>filenames
   { "-tests.factor" ".factor" } [ append ] with map
   first2 ;
 
+
 : (handle-name-clash) ( -- )
   reversed-roots-this-session? namespaces:get not [
     vocab-roots namespaces:get reverse vocab-roots namespaces:set
@@ -76,6 +88,7 @@ M: user-env exercise>filenames
   reversed-roots-this-session? t namespaces:set ; inline
 
 HOOK: handle-name-clash project-env ( name -- )
+
 M: dev-env handle-name-clash
   exercises-folder prepend-path add-vocab-root
   (handle-name-clash) ; inline
@@ -85,11 +98,21 @@ M: user-env handle-name-clash
   (handle-name-clash) ; inline
 
 
-HOOK: get-config-data project-env ( -- config )
-M: dev-env get-config-data
-  "config.json" path>json
-  { "problems" "deprecated" } [ swap at ] with map
+: (config>objects) ( json -- config )
+  config-keys select-keys
+
+  V{ } clone-like dup pop [
+    exercise-keys select-keys
+    exercise slots>tuple
+  ] map
+  over push
+
   config slots>tuple ;
+
+HOOK: get-config-data project-env ( -- config )
+
+M: dev-env get-config-data
+  "config.json" path>json (config>objects) ;
 
 M: user-env get-config-data
   M\ user-env get-config-data not-user-env ;
@@ -130,7 +153,8 @@ M: user-env config-matches-fs?
 
 :: (run-exercism-test) ( exercise -- )
   exercise
-  [ name-clashes member?
+  [
+    name-clashes member?
     [ exercise handle-name-clash ] when
   ]
   [ "\ntesting exercise: %s\n\n" printf ]
@@ -192,7 +216,7 @@ M: dev-env verify-config
 
   [ "config.json and exercises OK" print ]
   [ "invalid config.json\n"
-    print 2 exit ]
+    print ]
   if ;
 
 M: user-env verify-config
@@ -201,7 +225,7 @@ M: user-env verify-config
 
   [ "config OK: all problems have implementations and unit tests" print ]
   [ "invalid config: problems are missing implementations or tests\n"
-    print 2 exit ]
+    print ]
   if ;
 
 M: f verify-config
