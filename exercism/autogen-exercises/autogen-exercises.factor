@@ -11,6 +11,11 @@ CONSTANT: unit-test-keys { "description" "expected" "input" }
 M: f present
   drop "f" ;
 
+M: array present
+  [ present ] map
+  dup length 2 * 1 + "%s " swap
+  cycle vsprintf "{ " prepend " }" append ;
+
 : my-http-get ( url -- data )
   [ "GET: %s\n" printf ]
   [ http-get nip ]
