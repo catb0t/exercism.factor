@@ -13,30 +13,62 @@ IN: exercism.self-update
 CONSTANT: own-rawgit-url-stub
   "https://raw.githubusercontent.com/catb0t/exercism.factor/master/exercism"
 
+CONSTANT: local-version-file  "VERSION.txt"
+CONSTANT: remote-version-file "/VERSION.txt"
+
 SYMBOL: self-update-now?
 SYMBOL: version-lines
 
-: with-exercism-root ( quot -- )
-  [ "exercism" vocab>path absolute-path ] dip with-directory ; inline
+TUPLE: version-type ;
+TUPLE: local  < version-type ; final
+TUPLE: remote < version-type ; final
+
+M: local  present drop "local"  ;
+M: remote present drop "remote" ;
+
+GENERIC: (get-version) ( -- version-lines )
+
+M: local (get-version)
+  local-version-file utf8 file-lines ;
+
+M: remote (get-version)
+  own-rawgit-url-stub remote-version-file append
+  my-http-get nip string-lines ;
+
+TYPED: serialise-nowtime ( -- nowtime: string )
+  now timestamp>unix-time >integer number>string ;
+
+TYPED: epoch>minutes ( epoch: number -- minutes: number )
+  unix-time>timestamp ago duration>minutes floor ;
+
+! pure
+: directories>git-urls ( directories -- urls )
+  [ own-rawgit-url-stub prepend-path ] map ;
+
+! pure
+: directories>filenames ( directories -- filenames )
+  [
+    ".factor" { "" "-docs" "-tests" }
+    [ glue ]
+    2with map
+  ] map zip ;
+
+: checksum-local-files ( -- checksum )
+  "*/*.factor" glob natural-sort [
+    utf8 file-lines
+  ] map concat
+  [ "\n" append ] map "" join ! Add newlines between and at the end (factor/factor#1708)
+  sha-224 checksum-bytes bytes>hex-string ;
+
 
 : get-version ( version-type -- version-lines )
-  f version-lines set
-  [
-    {
-      { [ dup "local" = ] [ drop "VERSION.txt" utf8 file-lines version-lines set ] }
-      { [ dup "remote" = ] [ drop own-rawgit-url-stub "/VERSION.txt" append http-get nip string-lines version-lines set ] }
-        [ "bad cond to get-version" throw ]
-    } cond
-    version-lines get
-    
-  ] with-exercism-root ;
+  [ (get-version) ] with-exercism-root ;
 
 : do-update? ( -- self-update-now? )
   f self-update-now? set
 
   [
-
-    { "local" "remote" }
+    { local remote }
     [ get-version ] map first2 swap 2dup =
 
     [ 2drop { t t } ]
@@ -49,10 +81,14 @@ SYMBOL: version-lines
     if
 
     {
-      { [ dup { f f } = ] [ drop "nocorrel; client is ahead, publish your local changes!" print ] }
-      { [ dup { t f } = ] [ drop "samesha2; client is equal & older: no update" print ] }
-      { [ dup { f t } = ] [ drop "timegteq; server is ahead & newer: UPDATE" print t self-update-now? set ] }
-      { [ dup { t t } = ] [ drop "bothtrue; server is equal & newer: no update" print ] }
+      { [ dup { f f } = ] [
+        drop "nocorrel; local is ahead!" print ] }
+      { [ dup { t f } = ] [
+        drop "samesha2; local is equal  & older: no update" print ] }
+      { [ dup { f t } = ] [
+        drop "timegteq; remote is ahead & newer: UPDATE" print t self-update-now? set ] }
+      { [ dup { t t } = ] [
+        drop "bothtrue; remote is equal & newer: no update" print ] }
     } cond
     self-update-now? get
 
@@ -61,18 +97,10 @@ SYMBOL: version-lines
 
 : generate-urls ( -- urls )
   [
-    ! directories -> urls
-    "." child-directories dup [
-      own-rawgit-url-stub prepend-path
-    ] map
-
-    ! directories -> filenames
-    over [
-      ".factor"
-      { "" "-docs" "-tests" }
-      [ glue ]
-      2with map
-    ] map zip
+    "." child-directories
+    [ directories>git-urls ]
+    [ directories>filenames ]
+    bi
 
     ! append and package
     [
@@ -88,7 +116,8 @@ SYMBOL: version-lines
       [
         [
           [ "GET: %s\n" printf ]
-          [ download ] bi
+          [ download ]
+          bi
         ]
         each
       ] with-directory
@@ -102,31 +131,27 @@ SYMBOL: version-lines
 
 : bump-version ( -- )
   [
-    "*/*.factor" glob natural-sort [
-      utf8 file-lines
-    ] map concat
-    [ "\n" append ] map "" join ! Add newlines between and at the end (factor/factor#1708)
-    sha-224 checksum-bytes bytes>hex-string
-
-    now timestamp>unix-time >integer number>string
+    checksum-local-files
+    serialise-nowtime
 
     2array
     [ [ print ] each ]
-    [ "./VERSION.txt" utf8 set-file-lines ]
+    [ local-version-file utf8 set-file-lines ]
     bi
   ] with-exercism-root ;
 
 : humanise-version ( -- )
   "versions:" print
-  { "local" "remote" }
+  { local remote }
   [
     "\n" write
     [ print ]
     [
-      get-version
-      first2 [ print ] dip string>number
+      get-version first2
+      [ print ] dip string>number
+
       [ "%d" printf ]
-      [ unix-time>timestamp ago duration>minutes floor " (%s minutes ago)\n" printf ]
+      [ epoch>minutes " (%s minutes ago)\n" printf ]
       bi
     ]
     bi

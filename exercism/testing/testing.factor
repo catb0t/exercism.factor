@@ -255,7 +255,7 @@ M: f run-exercism-test
       [ verify-config "exercism.testing: choose-suite: bad last argument `%s', expected 'run-all' or an exercise slug\n\n" printf ]
   } cond ;
 
-: guess-project-env ( -- )
+: guess-project-env ( -- env )
   wd-is-user-env? wd-is-dev-env? xor
   [ current-directory project-env [ namespaces:get ] bi@
     "working directory OK: %s is a %s \n" printf
@@ -263,11 +263,12 @@ M: f run-exercism-test
   [ current-directory namespaces:get
     "exercism.testing: `%s' is not an `exercism/factor' folder or `xfactor' git project \n\n" printf
     f project-env namespaces:set
-  ] if ;
+  ] if
+  project-env namespaces:get ;
 
 : exercism-testing-main ( -- )
   (command-line) last
   choose-exercism-test-suite ;
 
-guess-project-env
+guess-project-env drop
 MAIN: exercism-testing-main
