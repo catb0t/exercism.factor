@@ -1,85 +1,16 @@
-USING: accessors arrays assocs calendar checksums checksums.sha
-  classes.tuple combinators command-line exercism
-  formatting http.client io io.directories io.encodings.utf8
-  io.files io.files.info io.launcher io.pathnames json.reader
-  kernel locals math math.parser multiline parser present
-  sequences sets sorting splitting strings summary system
-  tools.scaffold.private tools.test unicode vocabs.loader ;
-QUALIFIED: namespaces
-QUALIFIED: sets
+USING: combinators command-line exercism exercism.config
+  formatting io.pathnames kernel locals namespaces parser
+  sequences tools.test unicode vocabs.loader ;
 IN: exercism.testing
-
 
 <PRIVATE
 
 
 SYMBOL: reversed-roots-this-session?
-SYMBOL: update-now?
-
-SYMBOL: project-env
-ERROR:  wrong-project-env word ;
 
 
 CONSTANT: name-clashes
   { "hello-world" "binary-search" "poker" }
-
-CONSTANT: git-dev-repo-name
-  "xfactor"
-
-CONSTANT: config-keys
-  { "problems" "deprecated" "exercises" }
-
-CONSTANT: exercise-keys
-  { "topics" "difficulty" "slug" }
-
-TUPLE: exercise
-      { topics     array  }
-      { difficulty number }
-      { slug       string }  ; final
-
-TUPLE: config
-      { problems   array }
-      { deprecated array }
-      { exercises  array } ; final
-
-TUPLE: user-env ; final
-M:     user-env present drop "user-env" ;
-
-ERROR: not-user-env < wrong-project-env ; final
-M:     not-user-env
-  summary word>> name>> "can't use word %s in dev environment" sprintf ;
-
-TUPLE: dev-env ; final
-M:     dev-env present drop "dev-env" ;
-
-ERROR: not-dev-env < wrong-project-env ; final
-M:     not-dev-env
-  summary word>> name>> "can't use word %s in user environment"  sprintf ;
-
-ERROR:  not-an-exercism-folder word ;
-M:      not-an-exercism-folder summary
-  word>> name>> "exercism.testing: %s: current directory is not an exercism folder" sprintf ;
-
-
-
-HOOK: exercises-folder project-env ( -- dirname )
-M: dev-env  exercises-folder  "exercises" ; inline
-M: user-env exercises-folder  "."         ; inline
-M: f        exercises-folder  \ exercises-folder not-an-exercism-folder ;
-
-
-HOOK: exercise>filenames project-env ( test-name -- example-filename tests-filename )
-
-M: dev-env exercise>filenames
-  dup exercises-folder prepend-path prepend-path
-  { "-tests.factor" "-example.factor" }
-  [ append ] with map first2 ;
-
-M: user-env exercise>filenames
-  dup prepend-path
-  { "-tests.factor" ".factor" } [ append ] with map
-  first2 ;
-
 
 : (handle-name-clash) ( -- )
   reversed-roots-this-session? namespaces:get not [
@@ -97,60 +28,6 @@ M: user-env handle-name-clash
   add-vocab-root
   (handle-name-clash) ; inline
 
-
-: (config>objects) ( json -- config )
-  config-keys select-keys
-
-  V{ } clone-like dup pop [
-    exercise-keys select-keys
-    exercise slots>tuple
-  ] map
-  over push
-
-  config slots>tuple ;
-
-HOOK: get-config-data project-env ( -- config )
-
-M: dev-env get-config-data
-  "config.json" path>json (config>objects) ;
-
-M: user-env get-config-data
-  M\ user-env get-config-data not-user-env ;
-
-
-HOOK: exercise-exists? project-env ( exercise -- ? )
-M:: dev-env exercise-exists? ( name -- ? )
-  name
-  [ get-config-data problems>> member? ]
-  [ exercises-folder prepend-path exists? ]
-  bi and
-  [ name exercise>filenames [ exists? ] bi@ and ]
-  [ f ]
-  if ;
-
-M: user-env exercise-exists?
-  dup exercise>filenames [ exists? ] tri@ and and ;
-
-M: f exercise-exists?
-  drop \ exercise-exists? not-an-exercism-folder ;
-
-
-HOOK: config-exclusive? project-env ( problems deprecated -- ? )
-M: dev-env config-exclusive?
-  sets:intersect { } = ;
-
-M: user-env config-exclusive?
-  M\ user-env config-exclusive? not-dev-env ;
-
-
-HOOK: config-matches-fs? project-env ( dirs problems deprecated -- ? )
-M: dev-env config-matches-fs?
-  [ over ] dip sets:intersect { } = -rot
-  [ natural-sort ] bi@ = and ;
-
-M: user-env config-matches-fs?
-  \ config-matches-fs? not-dev-env ;
-
 :: (run-exercism-test) ( exercise -- )
   exercise
   [
@@ -162,74 +39,7 @@ M: user-env config-matches-fs?
   tri
   run-file run-test-file ;
 
-HOOK: wd-git-name os ( -- name )
-M: windows wd-git-name "" ;
-
-M: unix wd-git-name
-  "git rev-parse --show-toplevel" utf8 [ contents ] with-process-reader*
-  nip 0 =
-  [ path-components last dup length 1 - head ]
-  [ drop "" ]
-  if ;
-
-: dev-files-exist? ( -- ? )
-  "exercises" { ".keep" "hello-world" }
-  [ append-path ] with map
-  {
-    "config.json"
-    ".git"
-    ".gitignore"
-    "exercises"
-  }
-  append
-  [ exists? ] all? ;
-
-: valid-git-repo-name? ( -- ? )
-  wd-git-name git-dev-repo-name = ;
-
-: dev-wd? ( -- ? )
-  git-dev-repo-name ".." prepend-path absolute-path
-  current-directory namespaces:get = ;
-
-: wd-is-dev-env? ( -- ? )
-  dev-files-exist? valid-git-repo-name? dev-wd? 3array [ ] all?
-  dup [ T{ dev-env } project-env namespaces:set ] when ;
-
-: wd-is-user-env? ( -- ? )
-  "hello-world" exists?
-  dup [ T{ user-env } project-env namespaces:set ] when ;
-
 PRIVATE>
-
-HOOK: verify-config project-env ( -- )
-M: dev-env verify-config
-  get-config-data dup problems>> [ deprecated>> ] dip 2dup
-  [ config-exclusive? ] 2dip
-
-  swap exercises-folder child-directories -rot
-  config-matches-fs?
-  and
-
-  exercises-folder child-directories
-  [ exercise>filenames [ exists? ] bi@ and ] all?
-  and
-
-  [ "config.json and exercises OK" print ]
-  [ "invalid config.json\n"
-    print ]
-  if ;
-
-M: user-env verify-config
-  exercises-folder child-directories
-  [ exercise>filenames [ exists? ] bi@ and ] all?
-
-  [ "config OK: all problems have implementations and unit tests" print ]
-  [ "invalid config: problems are missing implementations or tests\n"
-    print ]
-  if ;
-
-M: f verify-config
-  \ verify-config not-an-exercism-folder ;
 
 
 HOOK: run-exercism-test project-env ( exercise -- )
@@ -255,20 +65,8 @@ M: f run-exercism-test
       [ verify-config "exercism.testing: choose-suite: bad last argument `%s', expected 'run-all' or an exercise slug\n\n" printf ]
   } cond ;
 
-: guess-project-env ( -- env )
-  wd-is-user-env? wd-is-dev-env? xor
-  [ current-directory project-env [ namespaces:get ] bi@
-    "working directory OK: %s is a %s \n" printf
-  ]
-  [ current-directory namespaces:get
-    "exercism.testing: `%s' is not an `exercism/factor' folder or `xfactor' git project \n\n" printf
-    f project-env namespaces:set
-  ] if
-  project-env namespaces:get ;
-
 : exercism-testing-main ( -- )
   (command-line) last
   choose-exercism-test-suite ;
 
-guess-project-env drop
 MAIN: exercism-testing-main

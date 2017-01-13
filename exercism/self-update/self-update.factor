@@ -1,11 +1,10 @@
 USING: arrays assocs calendar checksums checksums.sha
-  combinators command-line exercism.testing.private formatting
-  globs http.client io io.directories io.encodings.utf8 io.files
-  io.pathnames kernel locals math math.functions math.parser
-  namespaces prettyprint sequences sorting splitting
-  tools.scaffold.private unicode ;
+  combinators command-line exercism exercism.testing.private
+  formatting globs http.client io io.directories io.encodings.utf8
+  io.files io.pathnames kernel locals math math.functions
+  math.parser namespaces present prettyprint sequences sorting
+  splitting strings tools.scaffold.private typed unicode ;
 IN: exercism.self-update
-
 
 <PRIVATE
 
@@ -26,10 +25,10 @@ TUPLE: remote < version-type ; final
 M: local  present drop "local"  ;
 M: remote present drop "remote" ;
 
-GENERIC: (get-version) ( -- version-lines )
+GENERIC: (get-version)  ( local/remote -- version-lines )
 
 M: local (get-version)
-  local-version-file utf8 file-lines ;
+  drop local-version-file utf8 file-lines ;
 
 M: remote (get-version)
   own-rawgit-url-stub remote-version-file append
@@ -41,9 +40,6 @@ TYPED: serialise-nowtime ( -- nowtime: string )
 TYPED: epoch>minutes ( epoch: number -- minutes: number )
   unix-time>timestamp ago duration>minutes floor ;
 
-! pure
-: directories>git-urls ( directories -- urls )
-  [ own-rawgit-url-stub prepend-path ] map ;
 
 ! pure
 : directories>filenames ( directories -- filenames )
@@ -51,7 +47,7 @@ TYPED: epoch>minutes ( epoch: number -- minutes: number )
     ".factor" { "" "-docs" "-tests" }
     [ glue ]
     2with map
-  ] map zip ;
+  ] map ;
 
 : checksum-local-files ( -- checksum )
   "*/*.factor" glob natural-sort [
@@ -97,15 +93,12 @@ TYPED: epoch>minutes ( epoch: number -- minutes: number )
 
 : generate-urls ( -- urls )
   [
-    "." child-directories
-    [ directories>git-urls ]
-    [ directories>filenames ]
-    bi
+    "*.factor"
+    "*/*.factor"
+    [ glob ] bi@ append
 
-    ! append and package
-    [
-      first2 [ append-path ] with map
-    ] map zip
+    own-rawgit-url-stub "/" append
+    swap [ prepend ] with map
   ] with-exercism-root ;
 
 : download-file-urls ( urls -- )

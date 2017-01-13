@@ -1,12 +1,12 @@
 USING: arrays assocs calendar checksums checksums.sha
-  combinators command-line exercism exercism.testing
-  exercism.testing.private formatting globs hashtables http.client
-  io io.directories io.encodings.utf8 io.files io.pathnames
-  json.reader kernel locals math math.functions math.parser
-  namespaces present prettyprint sequences sorting splitting
-  strings tools.scaffold.private unicode ;
+  combinators command-line exercism exercism.config
+  exercism.testing exercism.testing.private formatting globs
+  hashtables http.client io io.directories io.encodings.utf8
+  io.files io.pathnames json.reader kernel locals math
+  math.functions math.parser namespaces present prettyprint
+  sequences sorting splitting strings tools.scaffold.private
+  unicode ;
 IN: autogen-exercises
-
 
 <PRIVATE
 
@@ -17,10 +17,18 @@ CONSTANT: exercise-case-base "https://raw.githubusercontent.com/exercism/x-commo
 
 CONSTANT: unit-test-keys { "description" "expected" "input" }
 
-CONSTANT: ftype-using-ns H{
+CONSTANT: ftype-using-ns
+  H{
     { "tests" { { "USING: " " tools.test ;" } { "IN: " ".tests" } } }
     { "example" { { "USING: ; ! " "" } { "IN: " "" } } }
   }
+
+CONSTANT: slugs-wordnames
+  H{
+    { "hello-world" "hello-name" }
+    { "leap"        "leap-year?" }
+  }
+
 
 M: f present
   drop "f" ;

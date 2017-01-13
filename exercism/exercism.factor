@@ -1,6 +1,7 @@
 USING: accessors assocs continuations formatting http.client io
   io.directories io.encodings.utf8 io.files io.files.info
-  io.pathnames kernel sequences summary tools.scaffold.private ;
+  io.pathnames kernel present sequences summary
+  tools.scaffold.private ;
 IN: exercism
 
 <PRIVATE
@@ -17,6 +18,18 @@ IN: exercism
   ] dip ;
 
 PRIVATE>
+
+! COMMON
+
+CONSTANT: git-dev-repo-name
+  "xfactor"
+
+CONSTANT: config-keys
+  { "problems" "deprecated" "exercises" }
+
+CONSTANT: exercise-keys
+  { "slug" "difficulty" "topics"   }
+
 
 : set-new-file-lines ( seq path -- )
   [ touch-file ]
@@ -42,7 +55,30 @@ PRIVATE>
   ]
   recover ;
 
-CONSTANT: slugs-wordnames H{
-    { "hello-world" "hello-name" }
-    { "leap"        "leap-year?" }
-  }
+! project-env stuff
+
+SYMBOL: project-env
+ERROR:  wrong-project-env word ;
+
+TUPLE: user-env ; final
+M:     user-env present drop "user-env" ;
+
+ERROR: not-user-env < wrong-project-env ; final
+M:     not-user-env
+  summary word>> name>> "can't use word %s in dev environment" sprintf ;
+
+TUPLE: dev-env ; final
+M:     dev-env present drop "dev-env" ;
+
+ERROR: not-dev-env < wrong-project-env ; final
+M:     not-dev-env
+  summary word>> name>> "can't use word %s in user environment"  sprintf ;
+
+ERROR:  not-an-exercism-folder word ;
+M:      not-an-exercism-folder summary
+  word>> name>> "exercism.testing: %s: current directory is not an exercism folder" sprintf ;
+
+HOOK: exercises-folder project-env ( -- dirname )
+M: dev-env  exercises-folder  "exercises" ; inline
+M: user-env exercises-folder  "."         ; inline
+M: f        exercises-folder  \ exercises-folder not-an-exercism-folder ;

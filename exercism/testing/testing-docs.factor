@@ -1,5 +1,6 @@
-USING: exercism exercism.testing.private help.markup help.syntax
-  io.directories multiline strings tools.test  ;
+USING: exercism exercism.config exercism.testing.private
+  help.markup help.syntax io.directories multiline strings
+  tools.test ;
 IN: exercism.testing
 
 HELP: verify-config
