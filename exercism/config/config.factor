@@ -36,7 +36,7 @@ TUPLE: entire-config-file
   ] map
   over push
 
-  config slots>tuple ;
+  relevant-config slots>tuple ;
 
 HOOK: exercise>filenames project-env ( test-name -- example-filename tests-filename )
 
@@ -60,7 +60,8 @@ M: user-env exercise>filenames
 : prettify-config ( -- )
   [
     "(cat config.json | jq) > config.json"
-    utf8 [ contents ] with-process-reader*
+    utf8 [ contents ] with-process-reader
+    drop
   ]
   with-exercism-root ;
 
