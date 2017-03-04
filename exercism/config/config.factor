@@ -1,9 +1,8 @@
 USING: exercism
   accessors arrays classes.tuple exercism formatting io
   io.encodings.utf8 io.files io.launcher io.pathnames json.reader
-  kernel locals math namespaces sequences sorting strings
+  kernel locals math namespaces sets sequences sorting strings
   system ;
-QUALIFIED: sets
 
 IN: exercism.config
 
@@ -69,7 +68,7 @@ M: user-env exercise>filenames
 
 HOOK: get-config-data project-env ( -- config )
 M: dev-env get-config-data
-  "config.json" my-path>json (config>objects) ;
+  "config.json" path>json (config>objects) ;
 
 M: user-env get-config-data
   M\ user-env get-config-data not-user-env ;

@@ -1,7 +1,6 @@
 USING: combinators command-line exercism exercism.config
   formatting io.pathnames kernel locals parser
-  sequences tools.test unicode vocabs.loader ;
-QUALIFIED: namespaces
+  namespaces sequences tools.test unicode vocabs.loader ;
 
 IN: exercism.testing
 
