@@ -1,6 +1,8 @@
 USING: combinators command-line exercism exercism.config
-  formatting io.pathnames kernel locals namespaces parser
+  formatting io.pathnames kernel locals parser
   sequences tools.test unicode vocabs.loader ;
+QUALIFIED: namespaces
+
 IN: exercism.testing
 
 <PRIVATE
@@ -27,6 +29,10 @@ M: dev-env handle-name-clash
 M: user-env handle-name-clash
   add-vocab-root
   (handle-name-clash) ; inline
+
+M: f handle-name-clash
+  drop
+  \ handle-name-clash not-an-exercism-folder ; inline
 
 :: (run-exercism-test) ( exercise -- )
   exercise
