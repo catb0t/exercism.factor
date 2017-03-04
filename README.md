@@ -16,11 +16,14 @@ This vocabulary allows end users to run the same unit tests on their code that [
 
 ## Getting started
 
-1. Install `exercism.testing` to somewhere Factor can find it. Sticking it under `resource:work` (or `git clone`ing) it there is a good idea.
-2. Open a shell (`bash`, `cmd.exe`, Powershell, etc) and run the following from your `exercism/factor` or `xfactor.git` directories:
+1. Install a **0.98 nightly build** (0.97 stable will not work!!) from [factorcode.org][factor] (the "Development release" section for your OS and arch), or build directly from [source](https://github.com/factor/factor)
+
+2. Clone or download the repository, and copy the `exercism` folder to `resource:work`<sup>1</sup>.
+3. Open a shell (`bash`, `cmd.exe`, Powershell, etc) and run the following from your `exercism/factor` Exercism directory or [`xfactor`][xfactor] clone:
   ```
   factor -run=exercism.testing run-all
   ```
+
   Or, from a Factor listener instance:
   ```factor
   IN: scratchpad USING: io.directories exercism.testing ;
@@ -40,6 +43,10 @@ This vocabulary allows end users to run the same unit tests on their code that [
   ```
 
 Viola!
+
+<sup>1</sup> Refers to the `work` subfolder of Factor's installation directory. If Factor's installation directory is `/home/you/factor`, `resource:work` refers to `/home/you/factor/work`.
+
+---
 
 Check out `exercism.testing`'s documentation for more information.
 
