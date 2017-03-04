@@ -69,7 +69,7 @@ M: user-env exercise>filenames
 
 HOOK: get-config-data project-env ( -- config )
 M: dev-env get-config-data
-  "config.json" path>json (config>objects) ;
+  "config.json" my-path>json (config>objects) ;
 
 M: user-env get-config-data
   M\ user-env get-config-data not-user-env ;

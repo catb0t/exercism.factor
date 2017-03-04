@@ -6,6 +6,12 @@ IN: exercism
 
 <PRIVATE
 
+! 0.97 doesn't define path>json
+: my-path>json ( path -- json )
+  utf8
+  [ read-json-objects first-json-object ] with-file-reader ;
+
+
 : (my-http-get) ( url -- data )
   [ "GET: %s" printf ]
   [ http-get ]
