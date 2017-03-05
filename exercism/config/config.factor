@@ -92,14 +92,14 @@ M: f exercise-exists?
 
 HOOK: config-exclusive? project-env ( problems deprecated -- ? )
 M: dev-env config-exclusive?
-  sets:intersect { } = ;
+  sets:intersect empty? ;
 
 M: user-env config-exclusive?
   M\ user-env config-exclusive? not-dev-env ;
 
 HOOK: config-matches-fs? project-env ( dirs problems deprecated -- ? )
 M: dev-env config-matches-fs?
-  [ over ] dip sets:intersect { } = -rot
+  [ over ] dip sets:intersect empty? -rot
   [ natural-sort ] bi@ = and ;
 
 M: user-env config-matches-fs?
