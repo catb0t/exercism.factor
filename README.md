@@ -1,25 +1,25 @@
 # exercism.factor
 
-interacting with [Exercism.io][exercism] from [Factor][factor]
+interacting with [Exercism.io][exercism] from [Factor][factorcode]
 
 - - -
 
 # `exercism.testing`
 
-making it easy for end users and maintainers alike to [unit-test](http://docs.factorcode.org/content/article-tools.test.html) [Factor](http://github.com/factor/factor) code on [Exercism.io](http://exercism.io)
+making it easy for end users and maintainers alike to [unit-test](http://docs.[factorcode].org/content/article-tools.test.html) [Factor](http://github.com/factor/factor) code on [Exercism.io](http://exercism.io)
 
 ## Rationale
 
 Factor and Exercism both have rather strict naming conventions which make a consistent and simple unit test interface tricky.
 
-This vocabulary allows end users to run the same unit tests on their code that [xfactor][xfactor] maintainers do, with a consistent interface.
+This vocabulary allows end users to run the same unit tests on their code that [factor][factor] maintainers do, with a consistent interface.
 
 ## Getting started
 
-1. Install a **0.98 nightly build** (0.97 stable will not work!!) from [factorcode.org][factor] (the "Development release" section for your OS and arch), or build directly from [source](https://github.com/factor/factor)
+1. Install a **0.98 nightly build** (0.97 stable will not work!!) from [[factorcode].org][factorcode] (the "Development release" section for your OS and arch), or build directly from [source](https://github.com/factor/factor)
 
 2. Clone or download the repository, and copy the `exercism` folder to `resource:work`<sup>1</sup>.
-3. Open a shell (`bash`, `cmd.exe`, Powershell, etc) and run the following from your `exercism/factor` Exercism directory or [`xfactor`][xfactor] clone:
+3. Open a shell (`bash`, `cmd.exe`, Powershell, etc) and run the following from your `exercism/factor` Exercism directory or [`factor`][factor] clone:
   ```
   factor -run=exercism.testing run-all
   ```
@@ -50,8 +50,8 @@ Viola!
 
 Check out `exercism.testing`'s documentation for more information.
 
-If you need help, just open an issue here or on [xfactor][xfactor].
+If you need help, just open an issue here or on [factor][factor].
 
- [exercism]: http://exercism.io
- [factor]:   http://factorcode.org
- [xfactor]:  http://github.com/exercism/xfactor
+ [exercism]:   http://exercism.io
+ [factorcode]: http://factorcode.org
+ [factor]:     http://github.com/exercism/factor

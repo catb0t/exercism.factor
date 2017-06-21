@@ -22,7 +22,7 @@ HELP: run-exercism-test
 
     $nl "To test user solutions to Exercism exercises, start Factor in the " { $snippet "exercism/factor" } " directory, or " { $link set-current-directory } " there from the Listener."
 
-    $nl "To test server-side example solutions to Exercism exercises, start Factor in the " { $snippet "exercism/xfactor" } " git repository, or " { $link set-current-directory } " there from the Listener."
+    $nl "To test server-side example solutions to Exercism exercises, start Factor in the " { $snippet "exercism/factor" } " git repository, or " { $link set-current-directory } " there from the Listener."
   }
 
   { $examples
@@ -40,7 +40,7 @@ Unit Test: { { \"Hello, Bob!\" } [ \"Bob\" hello-name ] }
 
     { $example
       "USING: io.directories exercism.testing ;"
-      "\"/home/you/git/exercism/xfactor\" set-current-directory"
+      "\"/home/you/git/exercism/factor\" set-current-directory"
       "\"hello-world\" run-exercism-test with-directory"
 
       "testing exercise: hello-world
@@ -64,7 +64,7 @@ HELP: choose-exercism-test-suite
 
 HELP: guess-project-env
   { $description
-    "Guesses (fairly accurately) whether the current directory is " { $link dev-env } " (exercism/xfactor git repository) or " { $link user-env } " (the " { $snippet "exercism/factor" } " Exercism folder)."
+    "Guesses (fairly accurately) whether the current directory is " { $link dev-env } " (exercism/factor git repository) or " { $link user-env } " (the " { $snippet "exercism/factor" } " Exercism folder)."
   } ;
 
 

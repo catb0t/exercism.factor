@@ -22,7 +22,7 @@ PRIVATE>
 ! COMMON
 
 CONSTANT: git-dev-repo-name
-  "xfactor"
+  "factor"
 
 CONSTANT: config-keys
   { "problems" "deprecated" "exercises" }

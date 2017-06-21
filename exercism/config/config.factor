@@ -12,7 +12,6 @@ TUPLE: exercise
       { topics     array  } ; final
 
 TUPLE: relevant-config
-      { problems   array }
       { deprecated array }
       { exercises  array } ; final
 
@@ -22,7 +21,6 @@ TUPLE: entire-config-file
       { repository   string  }
       { active       boolean }
       { test_pattern string  }
-      { problems     array   }
       { exercises    array   }
       { deprecated   array   }
       { ignored      array   }
@@ -60,7 +58,7 @@ M: user-env exercise>filenames
 
 : prettify-config ( -- )
   [
-    "(cat config.json | jq) > config.json"
+    "(jq < config.json) > config.json"
     utf8 [ contents ] with-process-reader
     drop
   ]
@@ -179,7 +177,7 @@ M: f verify-config
     "working directory OK: %s is a %s \n" printf
   ]
   [ current-directory namespaces:get
-    "exercism.testing: `%s' is not an `exercism/factor' folder or `xfactor' git project \n\n" printf
+    "exercism.testing: `%s' is not an `exercism/factor' folder or `factor' git project \n\n" printf
     f project-env namespaces:set
   ] if
   project-env namespaces:get ;
