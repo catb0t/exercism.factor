@@ -2,7 +2,7 @@ USING: arrays assocs calendar checksums checksums.sha
   combinators command-line exercism exercism.config
   exercism.testing exercism.testing.private formatting globs
   hashtables http.client io io.directories io.encodings.utf8
-  io.files io.pathnames json.reader kernel locals math
+  io.files io.pathnames json json.reader kernel locals math
   math.functions math.parser namespaces present prettyprint regexp
   sequences sorting splitting strings tools.scaffold.private
   unicode ;
@@ -13,9 +13,9 @@ IN: autogen-exercises
 
 CONSTANT: factor-track-json "http://x.exercism.io/v3/tracks/factor"
 
-CONSTANT: exercise-case-base "https://raw.githubusercontent.com/exercism/x-common/master/exercises/%s/canonical-data.json"
+CONSTANT: exercise-case-base "https://raw.githubusercontent.com/exercism/problem-specifications/master/exercises/%s/canonical-data.json"
 
-CONSTANT: unit-test-keys { "description" "expected" "input" "property" R/ input.*/ }
+CONSTANT: unit-test-keys { "description" "property" "expected" "input" }
 
 CONSTANT: ftype-using-ns
   H{
@@ -29,32 +29,41 @@ CONSTANT: slugs-wordnames
     { "leap"        "leap-year?" }
   }
 
+TUPLE: test-case
+  { description string }
+  { expected    string }
+  { property    string }
+  { input       string }
+
+  { other-keys  hashtable } ;
+
+M: json-null present
+  drop "" ;
 
 M: f present
-  drop "f" ;
+  unparse ;
 
-! it's a lot of work to set up the prettyprinter just to a string stream
 M: array present
-  dup empty?
-  [ drop "{ }" ]
-  [
-    [ [ dup string? [ "\"" dup surround ] when present ] map ]
-    [ length ]
-    bi
-    [ "%s " ] replicate "" join
-    vsprintf "{ " "}"  surround
-  ]
-  if ;
+  unparse ;
 
 M: assoc present
-  { } assoc-clone-like present ;
+  unparse ;
 
 M: hashtable present
-  { } assoc-clone-like present "H" prepend ;
+  unparse ;
 
 !
 ! { "property" "expected" "description" } [ dup -rot swap delete-at* drop 2array ] with map
 !
+
+: raw-case>test-case ( raw-case -- test-case )
+  [
+    unit-test-keys select-keys test-case slots>tuple
+  ]
+  [
+    [ drop unit-test-keys member? ] assoc-reject
+  ] bi
+  >>other-keys ;
 
 : slug>wordname ( slug -- wordname )
   dup slugs-wordnames at
@@ -67,13 +76,13 @@ M: hashtable present
 
 : get-todo-exercises ( -- todo-slugs )
   factor-track-json my-http-get json>
-  "track" swap at "todo" swap at ;
+  "track" of "todo" of ;
 
-: get-exercise-cases ( slug -- cases )
+: get-exercise-cases ( slug -- test-cases )
   exercise-case-base sprintf my-http-get json>
-  "cases" swap at ;
+  "cases" of [ raw-case>test-cases ] map ;
 
-: cases>unit-tests ( case -- code )
+: cases>unit-tests ( test-cases -- code-array )
   [
     unit-test-keys select-keys
     first3 "! %s\n{ %s } [ %s " sprintf

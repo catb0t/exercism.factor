@@ -23,7 +23,6 @@ TUPLE: entire-config-file
       { test_pattern string  }
       { exercises    array   }
       { deprecated   array   }
-      { ignored      array   }
       { foregone     array   } ; final
 
 : (config>objects) ( json -- config )
@@ -50,10 +49,10 @@ M: user-env exercise>filenames
   first2 ;
 
 : config-add-exercise ( config exercise -- config )
-  [ slug>> [ problems>> ] dip 1array append ]
+  [ slug>> [ exercises>> ] dip 1array append ]
   [ [ dup exercises>> ] dip 1array append >>exercises ]
   2bi
-  swap >>problems ;
+  swap >>exercises ;
 
 
 : prettify-config ( -- )
@@ -74,7 +73,7 @@ M: user-env get-config-data
 HOOK: exercise-exists? project-env ( exercise -- ? )
 M:: dev-env exercise-exists? ( name -- ? )
   name
-  [ get-config-data problems>> member? ]
+  [ get-config-data exercises>> member? ]
   [ exercises-folder prepend-path exists? ]
   bi and
   [ name exercise>filenames [ exists? ] bi@ and ]
@@ -88,14 +87,14 @@ M: f exercise-exists?
   drop \ exercise-exists? not-an-exercism-folder ;
 
 
-HOOK: config-exclusive? project-env ( problems deprecated -- ? )
+HOOK: config-exclusive? project-env ( exercises deprecated -- ? )
 M: dev-env config-exclusive?
   sets:intersect empty? ;
 
 M: user-env config-exclusive?
   M\ user-env config-exclusive? not-dev-env ;
 
-HOOK: config-matches-fs? project-env ( dirs problems deprecated -- ? )
+HOOK: config-matches-fs? project-env ( dirs exercises deprecated -- ? )
 M: dev-env config-matches-fs?
   [ over ] dip sets:intersect empty? -rot
   [ natural-sort ] bi@ = and ;
@@ -142,7 +141,7 @@ M: unix wd-git-name
 
 HOOK: verify-config project-env ( -- )
 M: dev-env verify-config
-  get-config-data dup problems>> [ deprecated>> ] dip 2dup
+  get-config-data dup exercises>> [ deprecated>> ] dip 2dup
   [ config-exclusive? ] 2dip
 
   swap exercises-folder child-directories -rot
@@ -162,8 +161,8 @@ M: user-env verify-config
   exercises-folder child-directories
   [ exercise>filenames [ exists? ] bi@ and ] all?
 
-  [ "config OK: all problems have implementations and unit tests" print ]
-  [ "invalid config: problems are missing implementations or tests\n"
+  [ "config OK: all exercises have implementations and unit tests" print ]
+  [ "invalid config: exercises are missing implementations or tests\n"
     print ]
   if ;
 

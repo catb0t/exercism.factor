@@ -1,6 +1,6 @@
 USING: accessors assocs continuations formatting http.client io
   io.directories io.encodings.utf8 io.files io.files.info
-  io.pathnames kernel present sequences summary
+  io.pathnames json kernel present sequences summary
   tools.scaffold.private ;
 IN: exercism
 
@@ -45,7 +45,7 @@ CONSTANT: exercise-keys
   [ name>>     ] map ;
 
 : select-keys ( assoc keys -- alist )
-  [ swap at ] with map ;
+  [ of dup json-null eq? [ drop "" ] when ] with map ;
 
 : my-http-get ( url -- data )
   [ (my-http-get) ]
